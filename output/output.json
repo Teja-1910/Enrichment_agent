@@ -1,7 +1,7 @@
 [
   {
-    "company_overview": "Postman is an AI-native API platform that enables teams to develop, test, manage, and distribute APIs and services. It provides high productivity for developers, ensures API quality, and enforces airtight governance for organizations at enterprise scale.",
-    "target_audience": "Developers, engineering teams, product teams, and enterprises (including 98% of the Fortune 500). It serves various industries such as Financial Services, E-Commerce, Data Analytics, and DevOps to streamline the API lifecycle and collaboration.",
+    "company_overview": "Postman is an AI-native API platform designed to help engineers develop, test, manage, and distribute APIs and services. It delivers high productivity for developers, API quality, and governance at enterprise scale, serving 500,000 companies including 98% of the Fortune 500.",
+    "target_audience": "Developers, engineering teams, and enterprises of all sizes. The platform specifically targets organizations across various industries, including financial services (e.g., PayPal, Nubank), technology companies (e.g., Cisco), and AI agent builders seeking to secure and manage API traffic.",
     "contact_points": [
       "info@postman.com",
       "info-jp@postman.com"
@@ -9,7 +9,7 @@
     "leadership_team": [
       {
         "name": "Abhinav Asthana",
-        "role": "CEO and co-founder",
+        "role": "CEO & Co-founder",
         "linkedin_url": null
       },
       {
@@ -23,7 +23,7 @@
         "linkedin_url": null
       }
     ],
-    "confidence_score": 0.95,
+    "confidence_score": 1.0,
     "source_urls": [
       "https://postman.com",
       "https://postman.com/solutions/api-lifecycle-management",
@@ -46,8 +46,8 @@
     "extraction_warnings": []
   },
   {
-    "company_overview": "Supabase is an open-source developer platform that provides a fully managed Postgres database along with essential back-end features such as authentication, storage, edge functions, and realtime data synchronization. It offers developers and organizations a scalable, integrated alternative to Firebase for building modern web and mobile applications.",
-    "target_audience": "Developers, engineering teams, startups, enterprises, innovation teams, agencies, and citizen developers (including non-technical staff) seeking to build, prototype, and scale production-ready applications, with specific solutions for industries like FinServ and Healthcare.",
+    "company_overview": "Supabase is an open-source backend platform that provides a fully managed Postgres database along with integrated features such as authentication, storage, real-time data, and edge functions. It allows developers to build and scale applications quickly by combining these essential services into a single, production-ready infrastructure.",
+    "target_audience": "The company targets developers, startups, enterprises, innovation teams, agencies, hackathon contestants, and product teams. It serves users who need to build and scale applications, including both technical engineers and non-technical teams looking to create production software with AI tools, across industries such as FinServ, Healthcare, and B2B SaaS.",
     "contact_points": [
       "legal@supabase.com",
       "privacy@supabase.com",
@@ -60,29 +60,9 @@
         "name": "Tracy Lane",
         "role": "General Counsel",
         "linkedin_url": null
-      },
-      {
-        "name": "Seth Siegler",
-        "role": "Chief Innovation Officer",
-        "linkedin_url": null
-      },
-      {
-        "name": "Yasser Elsaid",
-        "role": "Founder and CEO",
-        "linkedin_url": null
-      },
-      {
-        "name": "Thiago Peres",
-        "role": "Founder & CTO",
-        "linkedin_url": null
-      },
-      {
-        "name": "Kris Woods",
-        "role": "CTO",
-        "linkedin_url": null
       }
     ],
-    "confidence_score": 0.92,
+    "confidence_score": 1.0,
     "source_urls": [
       "https://supabase.com",
       "https://supabase.com/solutions/innovation-teams",
@@ -90,9 +70,7 @@
       "https://supabase.com/contact-us",
       "https://supabase.com/contact/sales",
       "https://supabase.com/careers",
-      "https://supabase.com/customers",
-      "https://supabase.com/customers/chatbase",
-      "https://supabase.com/customers/exprealty"
+      "https://supabase.com/customers/chatbase"
     ],
     "pages_analyzed": [
       "https://supabase.com",
@@ -102,11 +80,13 @@
       "https://supabase.com/contact/sales"
     ],
     "crawl_status": "success",
-    "extraction_warnings": []
+    "extraction_warnings": [
+      "One or more discovered pages could not be crawled."
+    ]
   },
   {
-    "company_overview": "Vapi is a unified platform for building, deploying, and scaling voice AI agents that handle tasks such as customer support, lead qualification, and appointment scheduling. The company provides enterprise-grade infrastructure with sub-500ms latency, allowing businesses to replace human call centers with automated voice interactions that integrate with existing systems.",
-    "target_audience": "Developers, engineering teams, and enterprises in industries such as healthcare, insurance, automotive, freight, and home security. The platform serves organizations ranging from small businesses to Fortune 100 companies, specifically targeting teams looking to automate contact center functions like customer support, lead generation, and appointment scheduling.",
+    "company_overview": "Vapi is a unified platform that allows developers and businesses to build, deploy, and improve voice AI agents with sub-500ms latency, enterprise-grade configurability, and real-time monitoring. It provides infrastructure for automated customer support, lead qualification, and appointment scheduling, emphasizing security compliance and ease of integration.",
+    "target_audience": "Builders, engineering teams, and developers seeking a code-controlled platform; scaling teams in production; and sophisticated enterprise organizations across industries such as healthcare, automotive, freight, insurance, and home security that require high-volume voice AI for support, sales, and recruitment.",
     "contact_points": [],
     "leadership_team": [
       {
@@ -115,16 +95,15 @@
         "linkedin_url": null
       },
       {
-        "name": "Alejandro Maza",
-        "role": "Chief Product & AI Officer",
+        "name": "Jayson Noland",
+        "role": "CFO",
         "linkedin_url": null
       }
     ],
-    "confidence_score": 0.95,
+    "confidence_score": 0.9,
     "source_urls": [
       "https://vapi.ai",
       "https://vapi.ai/sales",
-      "https://vapi.ai/solutions/contact-center",
       "https://vapi.ai/careers",
       "https://vapi.ai/customers",
       "https://vapi.ai/platform",
@@ -133,7 +112,6 @@
     ],
     "pages_analyzed": [
       "https://vapi.ai",
-      "https://vapi.ai/solutions/contact-center",
       "https://vapi.ai/pricing",
       "https://vapi.ai/careers",
       "https://vapi.ai/sales",

@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from groq import Groq
 
-from models import CompanyIntelligence
+from src.models import CompanyIntelligence
 
 load_dotenv()
 

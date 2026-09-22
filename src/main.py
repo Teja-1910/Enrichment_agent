@@ -2,14 +2,14 @@ import json
 from pathlib import Path
 from urllib.parse import urlparse
 
-from content_cleaner import clean_webpage_content
-from crawler import (
+from src.content_cleaner import clean_webpage_content
+from src.crawler import (
     crawl_relevant_pages,
     discover_relevant_page_urls,
     fetch_page_content,
 )
-from llm_extractor import extract_company_intelligence
-from models import CompanyLead
+from src.llm_extractor import extract_company_intelligence
+from src.models import CompanyLead
 
 # =============================================================
 # Configuration
@@ -194,12 +194,10 @@ def build_llm_context(
         ]
 
         selected_page_sections.append(
-            
-                f"SOURCE URL:\n"
-                f"{page_url}\n\n"
-                f"PAGE CONTENT:\n"
-                f"{selected_page_text}"
-            
+            f"SOURCE URL:\n"
+            f"{page_url}\n\n"
+            f"PAGE CONTENT:\n"
+            f"{selected_page_text}"
         )
 
         pages_analyzed.append(page_url)
@@ -239,12 +237,10 @@ def build_llm_context(
             continue
 
         selected_page_sections.append(
-            
-                f"SOURCE URL:\n"
-                f"{page_url}\n\n"
-                f"PAGE CONTENT:\n"
-                f"{selected_page_text}"
-            
+            f"SOURCE URL:\n"
+            f"{page_url}\n\n"
+            f"PAGE CONTENT:\n"
+            f"{selected_page_text}"
         )
 
         pages_analyzed.append(page_url)
