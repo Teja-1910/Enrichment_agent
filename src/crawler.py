@@ -1,3 +1,4 @@
+import os
 from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup
@@ -14,6 +15,21 @@ MENU_WAIT = 700
 # We deliberately keep the crawl bounded.
 # The goal is company intelligence, not crawling an entire site.
 MAX_RELEVANT_PAGES = 8
+
+def launch_browser(playwright):
+    """Launch Chromium locally or use system Chromium in deployment."""
+
+    chromium_path = os.getenv("CHROMIUM_PATH")
+
+    if chromium_path:
+        return playwright.chromium.launch(
+            executable_path=chromium_path,
+            headless=True,
+        )
+
+    return playwright.chromium.launch(
+        headless=True,
+    )
 
 
 # ---------------------------------------------------------
@@ -118,9 +134,7 @@ def fetch_page_content(
 
     with sync_playwright() as playwright:
 
-        browser = playwright.chromium.launch(
-            headless=True
-        )
+        browser = launch_browser(playwright)
 
         page = browser.new_page()
 
@@ -590,9 +604,7 @@ def discover_menu_links(
 
     with sync_playwright() as playwright:
 
-        browser = playwright.chromium.launch(
-            headless=True
-        )
+        browser = launch_browser(playwright)
 
         page = browser.new_page(
             viewport={
@@ -897,9 +909,7 @@ def crawl_relevant_pages(
 
     with sync_playwright() as playwright:
 
-        browser = playwright.chromium.launch(
-            headless=True
-        )
+        browser = launch_browser(playwright)
 
         page = browser.new_page()
 

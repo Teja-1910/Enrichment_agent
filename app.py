@@ -1,4 +1,14 @@
+import os
+import shutil
+
 import streamlit as st
+
+# Detect system Chromium when running on Streamlit Cloud
+chromium_path = shutil.which("chromium")
+
+if chromium_path:
+    os.environ["CHROMIUM_PATH"] = chromium_path
+
 
 from src.main import enrich_company
 
@@ -10,6 +20,7 @@ st.set_page_config(
 
 
 st.title("🤖 AI Lead Enrichment Agent")
+
 st.write(
     "Enter a company domain to crawl its public website and "
     "generate structured company intelligence."
