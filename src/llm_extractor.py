@@ -10,6 +10,9 @@ load_dotenv()
 
 GROQ_MODEL = "qwen/qwen3.8-27b"
 
+MAX_CONTENT_CHARS = 120_000
+MAX_RETRIES = 1
+
 
 def build_company_extraction_prompt(
     company_domain: str,
@@ -30,44 +33,69 @@ Analyze the supplied public website content for:
 COMPANY DOMAIN:
 {company_domain}
 
-The content contains multiple crawled website pages.
-Each page may be preceded by its SOURCE URL.
-
-Your task is to extract reliable company intelligence from
-ALL supplied pages.
-
-============================================================
-CORE RULE
-============================================================
-
 Use ONLY information explicitly supported by the supplied
 website content.
 
 Do NOT use outside knowledge.
-
 Do NOT guess.
+Do NOT fabricate missing information.
 
-Do NOT infer information that is not supported by the content.
+============================================================
+OUTPUT REQUIREMENTS
+============================================================
 
-If information is missing or cannot be reliably supported,
-return the appropriate empty value defined by the schema.
+Return EXACTLY ONE valid JSON object.
+
+Do NOT return:
+- Markdown
+- Code fences
+- Explanations
+- Reasoning
+- Comments
+- Text before the JSON
+- Text after the JSON
+
+The JSON object MUST contain exactly these fields:
+
+{{
+  "company_overview": "string",
+  "target_audience": "string",
+  "contact_points": [],
+  "leadership_team": [],
+  "confidence_score": 0.0
+}}
+
+Each leadership_team item MUST contain:
+
+{{
+  "name": "string",
+  "role": "string",
+  "linkedin_url": null
+}}
+
+If a LinkedIn URL is not explicitly present in the supplied
+website content, use null.
+
+If no public business contact emails are found, use:
+
+"contact_points": []
+
+If no clearly supported leadership information is found, use:
+
+"leadership_team": []
 
 ============================================================
 1. COMPANY OVERVIEW
 ============================================================
 
-Create a concise overview.
+Provide approximately two concise sentences.
 
 Describe:
 - what the company does
 - its main product, platform, or service
 - the main value it provides
 
-Keep the overview concise.
-
-Do not copy large sections of the website.
-
-Do not include unsupported claims.
+Use only evidence from the supplied content.
 
 ============================================================
 2. TARGET AUDIENCE / ICP
@@ -75,7 +103,7 @@ Do not include unsupported claims.
 
 Identify the company's target audience or ideal customer profile.
 
-Look across ALL supplied pages for explicit evidence such as:
+Look for explicit evidence involving:
 
 - developers
 - engineering teams
@@ -83,22 +111,18 @@ Look across ALL supplied pages for explicit evidence such as:
 - enterprises
 - product teams
 - agencies
-- specific industries
+- industries
 - business functions
 - customer use cases
 
-Prefer explicit descriptions from the website.
-
-Combine evidence from multiple pages when appropriate.
-
-Keep the answer concise.
+Keep the result concise.
 
 ============================================================
 3. CONTACT POINTS
 ============================================================
 
-Extract GENERIC/PUBLIC BUSINESS EMAIL ADDRESSES found directly
-in the supplied website content.
+Extract only generic/public business email addresses that
+actually appear in the supplied website content.
 
 Examples:
 
@@ -112,110 +136,89 @@ careers@company.com
 
 Rules:
 
-- Do NOT invent email addresses.
-- Do NOT construct an email address from the company domain.
-- Do NOT include unsupported email addresses.
-- Do NOT include personal/private email addresses unless the
-  website clearly presents them as public business contacts.
-- Remove duplicate email addresses.
-- Include only relevant public business contacts.
+- Never invent an email address.
+- Never construct an email address.
+- Remove duplicates.
+- Only include emails supported by the supplied content.
 
 ============================================================
-4. KEY LEADERSHIP / TEAM
+4. LEADERSHIP / TEAM
 ============================================================
 
-Search ALL supplied pages for leadership and team information.
+Search all supplied pages for clearly supported leadership
+or team members.
 
-Look especially for:
+Look for:
 
-- CEO
-- CTO
-- CFO
-- COO
-- CPO
-- Chief ...
-- Founder
-- Co-founder
-- President
-- Vice President
-- VP
-- General Counsel
-- Executive
-- Leadership
-- Our Team
-- Team
-- Management
+CEO
+CTO
+CFO
+COO
+CPO
+Chief ...
+Founder
+Co-founder
+President
+Vice President
+VP
+General Counsel
+Executive
+Leadership
+Our Team
+Team
+Management
 
-For every person included, the supplied content must explicitly
-support BOTH:
+For every person included:
 
-1. Their name
-2. Their role/title
-
-Rules:
-
-- Do NOT invent team members.
-- Do NOT use outside knowledge.
-- Do NOT infer a person's role.
-- Do NOT include a person's name without a supported role.
-- Remove duplicate people.
-- Include only clearly supported leadership/team members.
+- Their name must be explicitly present.
+- Their role must be explicitly supported.
+- Do not infer their role.
+- Do not use outside knowledge.
+- Do not duplicate people.
 
 ============================================================
 5. LINKEDIN URL
 ============================================================
 
-Include a LinkedIn URL ONLY when an actual LinkedIn URL appears
-in the supplied website content and is associated with that person.
+Only include a LinkedIn URL if an actual LinkedIn URL appears
+in the supplied website content and is associated with that
+person.
 
-Valid example:
+Do NOT:
 
-https://www.linkedin.com/in/example
+- construct LinkedIn URLs
+- guess usernames
+- search external sources
 
-Rules:
+Otherwise:
 
-- Do NOT construct a LinkedIn URL from a person's name.
-- Do NOT guess a LinkedIn username.
-- Do NOT search external sources.
-- If an actual LinkedIn URL is not present in the supplied
-  content, return null.
-
-A missing LinkedIn URL does NOT mean the person does not have
-LinkedIn. It only means the URL was not discoverable from the
-supplied website content.
+"linkedin_url": null
 
 ============================================================
 6. CONFIDENCE SCORE
 ============================================================
 
-Return a confidence score between 0.0 and 1.0.
+Return a number between 0.0 and 1.0.
 
-The score should represent how strongly the extracted information
+The score should reflect how strongly the extracted information
 is supported by the supplied website evidence.
 
 Consider:
 
-- quality of company overview evidence
-- quality of target-audience evidence
-- availability of public contact information
-- availability of explicit leadership/team information
-- number and relevance of supplied pages
-- consistency of information across pages
+- company overview evidence
+- target audience evidence
+- contact information
+- leadership information
+- number of relevant pages
+- consistency of evidence
 
-Use a lower score when important information is missing or weakly
-supported.
-
-Do not automatically assign a high score simply because the
-website contains a lot of text.
-
-Do not automatically assign a low score merely because a LinkedIn
-URL is missing.
+Do not give a high score merely because there is a lot of text.
 
 ============================================================
 7. SOURCE HANDLING
 ============================================================
 
-The supplied content may contain:
+Ignore:
 
 - navigation menus
 - repeated headers
@@ -225,47 +228,22 @@ The supplied content may contain:
 - boilerplate
 - duplicate content
 
-Ignore irrelevant navigation and repeated boilerplate.
-
-Give greater attention to meaningful page content.
-
-When the same information appears multiple times, treat it as
-one piece of evidence rather than duplicating it.
+Prioritize meaningful page content.
 
 ============================================================
-8. OUTPUT SIZE RULES
+FINAL RULES
 ============================================================
 
-Keep the response concise.
+Before returning the JSON:
 
-- company_overview: approximately 2 concise sentences.
-- target_audience: concise description.
-- contact_points: only relevant public business emails.
-- leadership_team: only clearly supported people.
-- Do not repeat information.
-- Do not include explanations outside the requested fields.
-- Do not include analysis or reasoning.
-- Do not include markdown.
-- Return ONLY the JSON object required by the schema.
-
-============================================================
-FINAL VALIDATION RULES
-============================================================
-
-Before producing the result:
-
-1. Inspect ALL supplied pages.
-2. Extract only supported information.
-3. Remove duplicate contacts.
-4. Remove duplicate people.
-5. Ensure every leadership member has both a supported name
-   and supported role.
-6. Only include LinkedIn URLs that actually appear in the
-   supplied content.
-7. Never fabricate missing information.
-8. Keep the response concise.
-9. Follow the supplied JSON schema exactly.
-10. Return ONLY the structured JSON object.
+1. Use only supplied website evidence.
+2. Remove duplicate contacts.
+3. Remove duplicate people.
+4. Ensure every leadership member has a name and role.
+5. Use null when a LinkedIn URL is unavailable.
+6. Keep all text concise.
+7. Return exactly one valid JSON object.
+8. Do not return anything outside the JSON object.
 
 ============================================================
 CRAWLED WEBSITE CONTENT
@@ -275,13 +253,168 @@ CRAWLED WEBSITE CONTENT
 """
 
 
+def build_retry_prompt(
+    company_domain: str,
+    website_content: str,
+) -> str:
+    """
+    Build a shorter recovery prompt when the first response
+    cannot be parsed or validated.
+    """
+
+    return f"""
+Return ONLY valid JSON.
+
+Analyze the supplied website content for {company_domain}.
+
+Use only information explicitly present in the content.
+Do not use outside knowledge.
+Do not guess.
+
+Return exactly this structure:
+
+{{
+  "company_overview": "string",
+  "target_audience": "string",
+  "contact_points": [],
+  "leadership_team": [],
+  "confidence_score": 0.0
+}}
+
+Each leadership member must have:
+
+{{
+  "name": "string",
+  "role": "string",
+  "linkedin_url": null
+}}
+
+Use null for missing LinkedIn URLs.
+
+Use [] when no contacts or leadership members are supported.
+
+Keep all text concise.
+
+Return ONLY the JSON object.
+
+WEBSITE CONTENT:
+
+{website_content}
+"""
+
+
+def _clean_website_content(
+    website_content: str,
+) -> str:
+    """
+    Prevent excessively large website content from being sent
+    to the LLM.
+    """
+
+    cleaned_content = website_content.strip()
+
+    if len(cleaned_content) <= MAX_CONTENT_CHARS:
+        return cleaned_content
+
+    return cleaned_content[:MAX_CONTENT_CHARS]
+
+
+def _call_llm(
+    groq_client: Groq,
+    prompt: str,
+) -> str:
+    """
+    Call the Groq model and return the raw response content.
+    """
+
+    response = groq_client.chat.completions.create(
+        model=GROQ_MODEL,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a precise company intelligence "
+                    "extraction system. "
+                    "Use only evidence from the supplied "
+                    "website content. "
+                    "Return only valid JSON."
+                ),
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ],
+        temperature=0,
+        max_completion_tokens=4096,
+    )
+
+    if not response.choices:
+        raise ValueError(
+            "The LLM returned no choices."
+        )
+
+    response_content = response.choices[0].message.content
+
+    if not response_content:
+        raise ValueError(
+            "The LLM returned an empty response."
+        )
+
+    return response_content.strip()
+
+
+def _parse_and_validate(
+    response_content: str,
+) -> CompanyIntelligence:
+    """
+    Parse the LLM JSON response and validate it using Pydantic.
+    """
+
+    cleaned_response = response_content.strip()
+
+    # Remove accidental Markdown fences if the model adds them.
+    if cleaned_response.startswith("```json"):
+        cleaned_response = cleaned_response[7:]
+
+    elif cleaned_response.startswith("```"):
+        cleaned_response = cleaned_response[3:]
+
+    cleaned_response = cleaned_response.removesuffix("```")
+
+    cleaned_response = cleaned_response.strip()
+
+    try:
+        parsed_response = json.loads(
+            cleaned_response
+        )
+
+    except json.JSONDecodeError as error:
+        raise ValueError(
+            "The LLM returned invalid JSON."
+        ) from error
+
+    try:
+        return CompanyIntelligence.model_validate(
+            parsed_response
+        )
+
+    except Exception as error:
+        raise ValueError(
+            "The LLM response did not match the expected "
+            "company intelligence schema."
+        ) from error
+
+
 def extract_company_intelligence(
     company_domain: str,
     website_content: str,
 ) -> CompanyIntelligence:
     """
-    Send cleaned website content to Qwen 3.8 27B through Groq
-    and return validated structured company intelligence.
+    Extract structured company intelligence from crawled
+    website content using Qwen 3.8 27B through Groq.
+
+    Pydantic is used as the final schema validation layer.
     """
 
     groq_api_key = os.getenv("GROQ_API_KEY")
@@ -301,73 +434,45 @@ def extract_company_intelligence(
         api_key=groq_api_key,
     )
 
+    cleaned_content = _clean_website_content(
+        website_content
+    )
+
     extraction_prompt = build_company_extraction_prompt(
         company_domain=company_domain,
-        website_content=website_content,
+        website_content=cleaned_content,
     )
 
-    response = groq_client.chat.completions.create(
-        model=GROQ_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are a precise company intelligence "
-                    "extraction system. "
-                    "Use only evidence from the supplied website "
-                    "content. "
-                    "Do not use outside knowledge. "
-                    "Follow the JSON schema exactly. "
-                    "Return only valid JSON."
-                ),
-            },
-            {
-                "role": "user",
-                "content": extraction_prompt,
-            },
-        ],
-        temperature=0,
-        reasoning_effort="none",
-        max_completion_tokens=4096,
-        response_format={
-            "type": "json_schema",
-            "json_schema": {
-                "name": "company_intelligence",
-                "strict": True,
-                "schema": CompanyIntelligence.model_json_schema(),
-            },
-        },
-    )
+    last_error = None
 
-    if not response.choices:
-        raise ValueError(
-            "The LLM returned no choices."
-        )
+    for attempt in range(MAX_RETRIES + 1):
 
-    response_content = response.choices[0].message.content
+        try:
 
-    if not response_content:
-        raise ValueError(
-            "The LLM returned an empty response."
-        )
+            if attempt == 0:
+                prompt = extraction_prompt
+            else:
+                prompt = build_retry_prompt(
+                    company_domain=company_domain,
+                    website_content=cleaned_content,
+                )
 
-    try:
-        parsed_response = json.loads(
-            response_content
-        )
+            response_content = _call_llm(
+                groq_client=groq_client,
+                prompt=prompt,
+            )
 
-    except json.JSONDecodeError as error:
-        raise ValueError(
-            "The LLM returned invalid JSON."
-        ) from error
+            return _parse_and_validate(
+                response_content
+            )
 
-    try:
-        return CompanyIntelligence.model_validate(
-            parsed_response
-        )
+        except ValueError as error:
 
-    except Exception as error:
-        raise ValueError(
-            "The LLM response did not match the expected "
-            "company intelligence schema."
-        ) from error
+            last_error = error
+
+            if attempt >= MAX_RETRIES:
+                break
+
+    raise ValueError(
+        f"LLM extraction failed after retry: {last_error}"
+    ) from last_error
